@@ -11,26 +11,46 @@ def generate_frames():
         "libcamera-vid",
         "-t", "0",  # Run indefinitely
         "--width", "640", "--height", "480", "--framerate", "30",
+        "--codec", "yuv420",  # Explicitly request YUV420 format
         "--inline",  # Stream the video
         "--output", "-"
     ]
+    
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+    frame_size = 640 * 480 * 3 // 2  # YUV420 size
+    
     while True:
-        # Read raw video data (YUV420P format)
-        raw_frame = process.stdout.read(640 * 480 * 3 // 2)  # 640 * 480 * 3/2 bytes for YUV420P
+        # Read raw video data (YUV420 format)
+        raw_frame = process.stdout.read(frame_size)
         if not raw_frame:
             break
-
+            
         # Convert the raw frame into a numpy array
-        frame = np.frombuffer(raw_frame, dtype=np.uint8).reshape((480 * 3 // 2, 640))  # YUV420P format
-
-        # Convert YUV to BGR (or RGB) using OpenCV
-        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_YUV2BGR_YV12)
-
+        yuv_frame = np.frombuffer(raw_frame, dtype=np.uint8)
+        
+        # Reshape the YUV data correctly for YV12/I420 format
+        # Create a properly formatted YUV frame that OpenCV can convert
+        yuv = np.zeros((480 * 3 // 2, 640), dtype=np.uint8)
+        
+        # Y plane (full resolution)
+        yuv[:480, :] = yuv_frame[:640*480].reshape((480, 640))
+        
+        # U plane (quarter resolution, every other row/column)
+        u_plane = yuv_frame[640*480:640*480 + 640*480//4].reshape((240, 320))
+        yuv[480:480+120, :640//2] = u_plane[:240//2, :]
+        yuv[480+120:480+240, :640//2] = u_plane[240//2:, :]
+        
+        # V plane (quarter resolution, every other row/column)
+        v_plane = yuv_frame[640*480 + 640*480//4:].reshape((240, 320))
+        yuv[480:480+120, 640//2:] = v_plane[:240//2, :]
+        yuv[480+120:480+240, 640//2:] = v_plane[240//2:, :]
+        
+        # Convert YUV to BGR using the correct format
+        frame_bgr = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_I420)
+        
         # Encode the frame as JPEG
         _, jpeg_frame = cv2.imencode('.jpg', frame_bgr)
-
+        
         # Yield the frame as a multipart HTTP response
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jpeg_frame.tobytes() + b'\r\n\r\n')
