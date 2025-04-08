@@ -1,11 +1,12 @@
 from flask import Flask, Response
 import cv2
 import subprocess
+import numpy as np
 
 app = Flask(__name__)
 
 def generate_frames():
-    # Start libcamera-vid in a subprocess
+    # Start libcamera-vid in a subprocess with raw output
     command = [
         "libcamera-vid",
         "-t", "0",  # Run indefinitely
@@ -16,12 +17,23 @@ def generate_frames():
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     while True:
-        # Read each frame from the video stream
-        frame = process.stdout.read(1024 * 1024)  # Adjust size if needed
-        if not frame:
+        # Read raw video data (YUV420P format)
+        raw_frame = process.stdout.read(640 * 480 * 3 // 2)  # 640 * 480 * 3/2 bytes for YUV420P
+        if not raw_frame:
             break
+
+        # Convert the raw frame into a numpy array
+        frame = np.frombuffer(raw_frame, dtype=np.uint8).reshape((480 * 3 // 2, 640))  # YUV420P format
+
+        # Convert YUV to BGR (or RGB) using OpenCV
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_YUV2BGR_YV12)
+
+        # Encode the frame as JPEG
+        _, jpeg_frame = cv2.imencode('.jpg', frame_bgr)
+
+        # Yield the frame as a multipart HTTP response
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + jpeg_frame.tobytes() + b'\r\n\r\n')
 
 @app.route('/')
 def index():
