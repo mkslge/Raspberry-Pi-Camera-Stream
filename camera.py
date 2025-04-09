@@ -37,15 +37,18 @@ def generate_frames():
 
 	
 	#y plane (full resolution)
-        yuv[:HEIGHT, :] = yuv_frame[:WIDTH*HEIGHT].reshape((HEIGHT , WIDTH))
+        y_plane_size = WIDTH * HEIGHT
+        yuv[:HEIGHT, :] = yuv_frame[:y_plane_size].reshape((HEIGHT , WIDTH))
 
         #u plane (quarter resolution, every other row/column)
-        u_plane = yuv_frame[WIDTH * HEIGHT:WIDTH * HEIGHT + WIDTH * HEIGHT//4].reshape((HEIGHT // 2, WIDTH // 2))
+        u_plane_size = y_plane_size + WIDTH * HEIGHT // 4
+        u_plane = yuv_frame[y_plane_size : u_plane_size].reshape((HEIGHT // 2, WIDTH // 2))
         yuv[HEIGHT:HEIGHT + (HEIGHT // 4), :WIDTH // 2] = u_plane[:(HEIGHT // 2) // 2, :]
         yuv[HEIGHT + (HEIGHT // 4):HEIGHT + (HEIGHT // 2), :WIDTH // 2] = u_plane[(HEIGHT // 2) // 2:, :]
 
         #v plane (quarter resolution, every other row/column)
-        v_plane = yuv_frame[WIDTH * HEIGHT + WIDTH * HEIGHT // 4:].reshape((HEIGHT // 2, WIDTH // 2))
+        v_plane_size = y_plane_size + WIDTH * HEIGHT // 4
+        v_plane = yuv_frame[v_plane_size:].reshape((HEIGHT // 2, WIDTH // 2))
         yuv[HEIGHT:HEIGHT + (HEIGHT // 4), WIDTH // 2:] = v_plane[:(HEIGHT // 2) // 2, :]
         yuv[HEIGHT + (HEIGHT // 4):HEIGHT + (HEIGHT // 2), WIDTH // 2:] = v_plane[(HEIGHT // 2) // 2:, :]
 
