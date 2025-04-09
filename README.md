@@ -18,7 +18,7 @@ You can install the dependencies by running:
 pip install flask opencv-python numpy
 ```
 
-To run the program, use the following command in the terminal:
+To run the program:
 ```bash
 python3 camera.py
 ```
