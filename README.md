@@ -1,7 +1,6 @@
 # Live Video Streaming with Flask and libcamera
 
-This project sets up a simple live video streaming server using Flask. It captures video from a Raspberry Pi camera using `libcamera-vid`, 
-The video is captured in YUV420 format
+This project sets up a simple live video streaming server using Flask. It captures video from a Raspberry Pi camera using `libcamera-vid`, and streams it to your local network
 
 
 
