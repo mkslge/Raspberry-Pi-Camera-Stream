@@ -13,6 +13,12 @@ The video is captured in YUV420 format
   - OpenCV (cv2)
   - Numpy
 
-You can install the required dependencies by running:
+You can install the dependencies by running:
 ```bash
 pip install flask opencv-python numpy
+```
+
+To run the program, use the following command in the terminal:
+```bash
+python3 camera.py
+```
