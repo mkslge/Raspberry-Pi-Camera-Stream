@@ -19,5 +19,9 @@ pip install flask opencv-python numpy
 
 To run the program:
 ```bash
-python3 camera.py
+python camera.py
+```
+To run the multstream program:
+```bash
+python multi-camera.py
 ```
