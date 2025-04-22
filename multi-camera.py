@@ -83,7 +83,7 @@ def camera_capture():
             latest_frame = jpeg.tobytes()
 
         #sleep for certain amount (you can adjust FPS)
-        time.sleep(1 / 5)  #~5fps
+        time.sleep(1 / 10)  #~10fps
 
 
 def generate_frames():
